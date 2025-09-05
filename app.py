@@ -1,113 +1,66 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.express as px
 
-# Sayfa yapılandırması
-st.set_page_config(page_title="Teknik Servis Paneli", layout="wide")
+st.set_page_config(page_title="Teknik Servis Raporu", layout="wide")
 
-# Özel CSS (tasarım için)
-st.markdown("""
-    <style>
-        .main {
-            background-color: #F5F7FA;
-        }
-        .card-container {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .card {
-            flex: 1;
-            background-color: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-        .card h1 {
-            font-size: 32px;
-            color: #34495E;
-            margin-bottom: 10px;
-        }
-        .card p {
-            font-size: 15px;
-            color: #7F8C8D;
-        }
-        .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #2C3E50;
-            margin-top: 40px;
-            margin-bottom: 10px;
-        }
-    </style>
-""", unsafe_allow_html=True)
+# ---- ÜST BANNER ----
+st.markdown(
+    """
+    <h1 style='text-align: center; color: black;'>
+        🔧 TEKNİK SERVİS RAPORU
+    </h1>
+    """,
+    unsafe_allow_html=True
+)
 
-# Excel'den veri oku
-excel_path = "teknik_servis_raporu.xlsx"
-df = pd.read_excel(excel_path, sheet_name=None)
+# ---- METRİK KARTLAR ----
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric("Bugün Gelen", "8")
+with col2:
+    st.metric("Bu Hafta Gelen", "52")
+with col3:
+    st.metric("Bu Ay Gelen", "180")
+with col4:
+    st.metric("Bekleyen", "12")
 
-# Başlık
-st.markdown("<h2 style='text-align: center; color:#2C3E50;'>📊 Teknik Servis Dashboard</h2><br>", unsafe_allow_html=True)
+st.markdown("---")
 
-# Genel Bilgiler
-genel = df['Genel Bilgiler'].iloc[0]
+# ---- AYLIK TREND ----
+st.subheader("📈 Aylık Trend")
+months = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"]
+data = {
+    "Ay": months,
+    "Ürün A": [10,20,25,21,23,30,22,26,21,25,24,32],
+    "Ürün B": [2,5,7,6,8,12,7,5,6,7,8,11]
+}
+df = pd.DataFrame(data)
 
-# 🔹 Kartlar
-st.markdown("<div class='card-container'>", unsafe_allow_html=True)
+fig = px.line(df, x="Ay", y=["Ürün A","Ürün B"], markers=True)
+st.plotly_chart(fig, use_container_width=True)
 
-st.markdown(f"""
-    <div class='card'>
-        <h1>{genel['Bugün Gelen']}</h1>
-        <p>Bugün Gelen</p>
-    </div>
-""", unsafe_allow_html=True)
+# ---- EN ÇOK ARIZA GELEN ----
+st.subheader("🔧 En Çok Arıza Gelen Ürünler")
+faults = pd.DataFrame({
+    "Ürün": ["Ürün A","Ürün B","Ürün C","Ürün D","Ürün E"],
+    "Adet": [25,18,15,10,8]
+})
+fig2 = px.bar(faults, x="Adet", y="Ürün", orientation="h", text="Adet")
+fig2.update_traces(marker_color="royalblue", textposition="outside")
+st.plotly_chart(fig2, use_container_width=True)
 
-st.markdown(f"""
-    <div class='card'>
-        <h1>{genel['Bu Hafta Gelen']}</h1>
-        <p>Bu Hafta Gelen</p>
-    </div>
-""", unsafe_allow_html=True)
-
-st.markdown(f"""
-    <div class='card'>
-        <h1>{genel['Bu Ay Gelen']}</h1>
-        <p>Bu Ay Gelen</p>
-    </div>
-""", unsafe_allow_html=True)
-
-st.markdown(f"""
-    <div class='card'>
-        <h1>{genel['Bekleyen']}</h1>
-        <p>Bekleyen</p>
-    </div>
-""", unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
-
-# 🔹 En Çok Arıza Gelen Ürünler
-st.markdown("<div class='section-title'>🔧 En Çok Arıza Gelen Ürünler</div>", unsafe_allow_html=True)
-top_ariza = df['En Çok Arıza Gelen']
-st.bar_chart(top_ariza.set_index('Ürün')['Arıza Sayısı'])
-
-# 🔹 Aylık Trend Grafiği
-st.markdown("<div class='section-title'>📈 Aylık Arıza Trendleri</div>", unsafe_allow_html=True)
-trend = df['Aylık Trend']
-fig, ax = plt.subplots()
-ax.plot(trend['Ay'], trend['Mavi Trend'], label='Mavi', color='royalblue', linewidth=2)
-ax.plot(trend['Ay'], trend['Turuncu Trend'], label='Turuncu', color='darkorange', linewidth=2)
-ax.set_xlabel("Ay")
-ax.set_ylabel("Arıza")
-ax.legend()
-st.pyplot(fig)
-
-# 🔹 Bekleyenler Tablosu
-st.markdown("<div class='section-title'>📋 Bekleyen Teknik Servisler</div>", unsafe_allow_html=True)
-bekleyen = df['Bekleyenler']
-st.dataframe(bekleyen, use_container_width=True)
-
-# Yenile butonu
-st.markdown(" ")
-if st.button("🔄 Sayfayı Yenile"):
-    st.rerun()
+# ---- TABLO ----
+st.subheader("📋 Bekleyenler")
+data_table = {
+    "Geliş Tarihi": ["01.09.2025","03.09.2025","05.09.2025"],
+    "Ad": ["Ahmet","Elif","Mehmet"],
+    "Soyad": ["Yılmaz","Demir","Kaya"],
+    "Ürün Kodu": ["X7533","X8550","X7015"],
+    "Ürün Adı": ["Akıllı Mama Kabı","Akıllı Su Pınarı","Panjur Motoru"],
+    "Adet": [18,15,10],
+    "Ay": [5,2,8],
+    "Yapılan İşlem": ["Onarım Bekliyor","İade Bekliyor","Değişim Bekliyor"]
+}
+df_table = pd.DataFrame(data_table)
+st.dataframe(df_table, use_container_width=True)
