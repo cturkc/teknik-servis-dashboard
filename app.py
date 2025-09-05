@@ -34,4 +34,21 @@ st.markdown("---")
 st.markdown("### 📈 Aylık Arıza Trendleri")
 trend = df['Aylık Trend']
 fig, ax = plt.subplots(figsize=(10, 4))
-ax.plot(trend['Ay'], trend['Mav]()
+ax.plot(trend['Ay'], trend['Mavi Trend'], label='Mavi Trend', color='blue', linewidth=2)
+ax.plot(trend['Ay'], trend['Turuncu Trend'], label='Turuncu Trend', color='orange', linewidth=2)
+ax.set_xlabel("Ay")
+ax.set_ylabel("Arıza Sayısı")
+ax.legend()
+st.pyplot(fig)
+
+st.markdown("---")
+
+# --- Bekleyenler ---
+st.markdown("### 📋 Bekleyen İşlem Listesi")
+bekleyen = df['Bekleyenler']
+st.dataframe(bekleyen, use_container_width=True)
+
+# Yenile Butonu
+st.markdown("### 🔄 Sayfayı Yenile")
+if st.button("Yenile"):
+    st.rerun()
